@@ -1,0 +1,13 @@
+[Unit]
+Description=Video Broadcast Service
+After=network.target nginx.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/bin/bash /home/kali/Desktop/Cyber\ Ex/Info\ Ops/StreamLab-VM1/broadcast.sh /home/kali/Desktop/Cyber\ Ex/Info\ Ops/StreamLab-VM1/videos/broadcast.mp4
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

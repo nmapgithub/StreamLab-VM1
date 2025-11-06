@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ANN News Management</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <style>
+      :root{--bg:#0f1720;--card:#0b1220;--accent:#ff6b35;--muted:#9aa4b2}
+      body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#071226 0%, #0f1b2b 100%);color:#e6eef6}
+      .wrap{max-width:980px;margin:32px auto;padding:20px}
+      .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+      .brand{display:flex;align-items:center;gap:12px}
+      .logo{width:48px;height:48px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700}
+      .title{font-size:18px}
+      .grid{display:grid;grid-template-columns:320px 1fr;gap:18px}
+      .card{background:rgba(255,255,255,0.03);padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+      label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+      input[type=text],input[type=password]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+      .btn{background:var(--accent);color:#071226;padding:10px;border-radius:8px;border:none;cursor:pointer;margin-top:12px}
+      .drop{border:2px dashed rgba(255,255,255,0.06);padding:20px;border-radius:10px;text-align:center}
+      .muted{color:var(--muted);font-size:13px}
+      .list{margin-top:12px}
+      .file{padding:8px;border-radius:8px;background:rgba(0,0,0,0.2);display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+      .progress{height:8px;background:#071226;border-radius:8px;overflow:hidden;margin-top:8px}
+      .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#ffa87a);width:0}
+      a.link{color:#9fe6ff;text-decoration:none}
+    </style>
+  </head>
+  <body>
+    <!-- FLAG: CYBEX{streaming_ops_2025_flag} -->
+    <div class="wrap">
+      <div class="header">
+        <div class="brand"><div class="logo">ANN</div><div class="title">ANN News — Management Console</div></div>
+        <div id="acct"></div>
+      </div>
+      <div class="grid">
+        <div class="card" id="left"></div>
+        <div class="card" id="right"></div>
+      </div>
+    </div>
+
+    <div id="root"></div>
+
+    <script>
+      const e=React.createElement; const {useState,useEffect,useRef}=React;
+
+      function Login({onLogin}){
+  const [user,setUser]=useState(''); const [pass,setPass]=useState(''); const [err,setErr]=useState(''); const [loading,setLoading]=useState(false);
+        async function submit(ev){ ev && ev.preventDefault(); setErr(''); setLoading(true);
+          try{
+            const res = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,password:pass}),credentials:'same-origin'});
+            if(res.ok){ onLogin(); } else { const j=await res.json(); setErr(j.error||'Login failed'); }
+          }catch(err){ setErr('Network error'); }
+          setLoading(false);
+        }
+
+        return e('div',null,
+          e('h3',null,'Sign in'),
+          err && e('div',{style:{color:'salmon',marginBottom:8}},err),
+          e('form',{onSubmit:submit},
+            e('label',null,'Username'), e('input',{type:'text',value:user,onChange:ev=>setUser(ev.target.value)}),
+            e('label',null,'Password'), e('input',{type:'password',value:pass,onChange:ev=>setPass(ev.target.value)}),
+            e('button',{className:'btn',type:'submit',disabled:loading}, loading? 'Signing in...' : 'Sign in')
+          ),
+          e('p',{className:'muted'}, '')
+        );
+      }
+
+      function UploadPanel(){
+        const [files,setFiles]=useState([]); const [msg,setMsg]=useState(''); const dropRef=useRef();
+
+  useEffect(()=>{ /* only refresh list after login via Console */ },[]);
+
+        async function refreshList(){
+          try{
+            const res = await fetch('/api/list');
+            if(!res.ok){ setFiles([]); return; }
+            const j = await res.json();
+            if(j.ok){ setFiles(j.files.map(f=>({name:f}))); } else { setFiles([]); }
+          }catch(e){ setFiles([]); }
+        }
+
+        function handleDrop(ev){ ev.preventDefault(); const f = ev.dataTransfer.files[0]; if(f) uploadFile(f); }
+        function allow(ev){ ev.preventDefault(); }
+
+        function uploadFile(file){
+          setMsg(''); const id = Date.now(); setFiles(prev=>[{name:file.name,id,progress:0,uploading:true},...prev]);
+          const xhr = new XMLHttpRequest(); const fd = new FormData(); fd.append('file', file);
+          xhr.open('POST','/api/upload', true); xhr.withCredentials = true;
+          xhr.upload.onprogress = function(e){ if(e.lengthComputable){ const p = Math.round((e.loaded / e.total)*100); setFiles(prev=>prev.map(it=> it.id===id?{...it,progress:p}:it)); }};
+          xhr.onload = function(){ if(xhr.status===200){ const j = JSON.parse(xhr.responseText); setFiles(prev=>prev.map(it=> it.id===id?{...it,progress:100,uploading:false,name:j.filename}:it)); refreshList(); setMsg('Upload complete'); } else { setFiles(prev=>prev.map(it=> it.id===id?{...it,uploading:false,err:true}:it)); setMsg('Upload failed'); }};
+          xhr.onerror = function(){ setMsg('Upload error'); setFiles(prev=>prev.map(it=> it.id===id?{...it,uploading:false,err:true}:it)); };
+          xhr.send(fd);
+        }
+
+        return e('div',null,
+          e('h3',null,'Upload & Publish'),
+          e('div',{ref:dropRef,className:'drop',onDrop:handleDrop,onDragOver:allow}, 'Drag & drop a video here, or use the upload button'),
+          e('input',{type:'file',accept:'.mp4,.mov,.mkv,.ts',onChange:ev=>ev.target.files[0] && uploadFile(ev.target.files[0])}),
+          e('div',{style:{marginTop:12}}, files.length? files.map((f,idx)=> e('div',{key:idx,className:'file'},
+              e('div',null, f.name || f),
+              e('div',null, f.uploading? e('span',{className:'muted'}, f.progress+'%') : e('a',{className:'link',href:'/videos/'+encodeURIComponent(f.name||f),target:'_blank'}, 'Open') ),
+              f.progress!=null && e('div',{className:'progress'}, e('i',{style:{width: (f.progress||0)+'%'}}))
+            )) : e('div',{className:'muted'}, 'No uploaded videos yet') ),
+          msg && e('div',{style:{marginTop:10,color:'#9fe6ff'}},msg)
+        );
+      }
+
+      function Console(){
+        const [logged,setLogged]=useState(false);
+        useEffect(()=>{ fetch('/api/status').then(r=>r.json()).then(j=>setLogged(j.logged_in)); },[]);
+        if(!logged) return e(Login,{onLogin:()=>setLogged(true)});
+        return e(UploadPanel);
+      }
+
+      // Render into our layout
+      ReactDOM.createRoot(document.getElementById('left')).render(e(Console));
+      // Right panel: minimal info (no hints or links)
+      function RightPanel(){
+        return e('div',null,
+          e('h3',null,'Management'),
+          e('p',{className:'muted'}, 'Authenticate to access upload and management features.')
+        );
+      }
+      ReactDOM.createRoot(document.getElementById('right')).render(e(RightPanel));
+    </script>
+  </body>
+</html>

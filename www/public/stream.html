@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ANN News - Live Broadcast</title>
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #dc2626;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --text-light: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border-color: #1e293b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-darker);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: var(--bg-dark);
+            padding: 1rem 0;
+            border-bottom: 3px solid var(--primary-red);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .logo::before {
+            content: 'LIVE';
+            display: inline-block;
+            background: var(--primary-red);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            animation: pulse 2s infinite;
+            font-weight: 700;
+        }
+        
+        .viewer-count {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(220, 38, 38, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--primary-red);
+        }
+        
+        .viewer-count::before {
+            content: '👁';
+            font-size: 1.2rem;
+        }
+        
+        .viewer-number {
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+        
+        /* Breaking News Ticker */
+        .news-ticker {
+            background: var(--primary-red);
+            padding: 0.5rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .ticker-content {
+            display: flex;
+            animation: scroll 30s linear infinite;
+            white-space: nowrap;
+        }
+        
+        .ticker-item {
+            padding: 0 2rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .ticker-item::before {
+            content: '🔴';
+            margin-right: 0.5rem;
+        }
+        
+        /* Main Layout */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 1.5rem;
+        }
+        
+        /* Comments Section - LEFT SIDE */
+        .comments-section {
+            background: var(--bg-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            border: 1px solid var(--border-color);
+        }
+        
+        .comments-header {
+            background: linear-gradient(135deg, var(--primary-red), #991b1b);
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .comments-header::before {
+            content: '💬';
+            font-size: 1.3rem;
+        }
+        
+        .comments-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-red) var(--bg-darker);
+        }
+        
+        .comments-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .comments-list::-webkit-scrollbar-track {
+            background: var(--bg-darker);
+        }
+        
+        .comments-list::-webkit-scrollbar-thumb {
+            background: var(--primary-red);
+            border-radius: 4px;
+        }
+        
+        .comment {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .comment.real {
+            border-left-color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+        
+        .comment.fake {
+            border-left-color: var(--primary-red);
+        }
+        
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-red), #fb923c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .comment-username {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .comment-badge {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            background: var(--primary-red);
+            font-weight: 600;
+        }
+        
+        .comment-time {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        .comment-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: var(--text-light);
+        }
+        
+        .comment-input-container {
+            padding: 1rem;
+            background: var(--bg-darker);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .comment-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .comment-input {
+            flex: 1;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+        }
+        
+        .comment-submit {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .comment-submit:hover {
+            background: #991b1b;
+            transform: translateY(-2px);
+        }
+        
+        /* Video Section - RIGHT SIDE */
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .stream-container {
+            background: var(--bg-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .stream-info {
+            padding: 1.5rem;
+            background: linear-gradient(to right, var(--bg-dark), rgba(220, 38, 38, 0.1));
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .stream-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+        }
+        
+        .stream-meta {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary-red);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .live-indicator::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .video-wrapper {
+            aspect-ratio: 16/9;
+            background: black;
+            position: relative;
+        }
+        
+        .video-js {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .video-js .vjs-control-bar {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .video-js .vjs-big-play-button {
+            background: var(--primary-red);
+            border-color: var(--primary-red);
+            border-radius: 50%;
+        }
+        
+        .video-js .vjs-big-play-button:hover {
+            background: #991b1b;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .comments-section {
+                height: 400px;
+                order: 2;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .viewer-count {
+                font-size: 0.85rem;
+            }
+            
+            .stream-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Firewall Bypass Check -->
+    <script>
+        (function() {
+            // Check for bypass authentication
+            const urlParams = new URLSearchParams(window.location.search);
+            const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [key, value] = cookie.trim().split('=');
+                acc[key] = value;
+                return acc;
+            }, {});
+
+            const hasBypass = (
+                urlParams.get('access') === 'granted' ||
+                urlParams.get('bypass') === 'firewall' ||
+                urlParams.get('admin') === 'true' ||
+                cookies['firewall_bypass'] === 'true' ||
+                cookies['admin_access'] === '1'
+            );
+
+            if (!hasBypass) {
+                // No bypass detected - redirect to firewall
+                console.log('%c⚠️ Access Denied - Firewall Active', 'color: #ff0000; font-size: 16px; font-weight: bold');
+                console.log('Redirecting to firewall page...');
+                window.location.href = '/';
+            } else {
+                // Bypass successful - set persistent cookie
+                document.cookie = 'firewall_bypass=true; path=/; max-age=3600';
+                console.log('%c✅ Firewall Bypassed!', 'color: #00ff00; font-size: 16px; font-weight: bold');
+                console.log('%cFLAG: PENTESTER{w4f_byp4ss_m4st3r}', 'color: #ff0000; font-size: 14px');
+            }
+        })();
+    </script>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">ANN News</div>
+            <div class="viewer-count">
+                <span class="viewer-number" id="viewerCount">1,234</span>
+                <span>Watching Now</span>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Breaking News Ticker -->
+    <div class="news-ticker">
+        <div class="ticker-content">
+            <span class="ticker-item">BREAKING: Live coverage continues</span>
+            <span class="ticker-item">UPDATE: Stay tuned for latest developments</span>
+            <span class="ticker-item">LIVE: Broadcasting 24/7</span>
+            <span class="ticker-item">ALERT: Follow for real-time updates</span>
+            <span class="ticker-item">BREAKING: Live coverage continues</span>
+            <span class="ticker-item">UPDATE: Stay tuned for latest developments</span>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Comments Section - LEFT -->
+        <div class="comments-section">
+            <div class="comments-header">
+                Live Comments
+            </div>
+            <div class="comments-list" id="commentsList">
+                <!-- Comments will be added here dynamically -->
+            </div>
+            <div class="comment-input-container">
+                <div class="comment-input-wrapper">
+                    <input 
+                        type="text" 
+                        class="comment-input" 
+                        id="commentInput" 
+                        placeholder="Share your thoughts..."
+                        maxlength="200"
+                    >
+                    <button class="comment-submit" onclick="postComment()">Send</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Video Section - RIGHT -->
+        <div class="video-section">
+            <div class="stream-container">
+                <div class="stream-info">
+                    <h1 class="stream-title">🔴 Breaking News - Live Coverage</h1>
+                    <div class="stream-meta">
+                        <div class="live-indicator">LIVE</div>
+                        <span>Broadcasting in HD Quality</span>
+                    </div>
+                </div>
+                <div class="video-wrapper">
+                    <video-js id="stream" class="vjs-default-skin" controls>
+                        <source src="/hls/stream.m3u8" type="application/x-mpegURL">
+                    </video-js>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script>
+        // Initialize Video Player
+        var player = videojs("stream", { 
+            fluid: true,
+            autoplay: true,
+            muted: false
+        });
+        
+        // Fake user names and comments
+        const fakeUsers = [
+            'John Smith', 'Sarah Johnson', 'Mike Williams', 'Emily Brown', 'David Lee',
+            'Jessica Davis', 'Chris Wilson', 'Amanda Taylor', 'Daniel Moore', 'Lisa Anderson',
+            'Ryan Thomas', 'Michelle Martin', 'Kevin Garcia', 'Jennifer Martinez', 'Robert Robinson'
+        ];
+        
+        const fakeComments = [
+            'Thanks for the live coverage! 📺',
+            'This is incredible reporting 👏',
+            'Watching from New York!',
+            'Great stream quality!',
+            'Can\'t believe this is happening live',
+            'Excellent coverage as always 🔥',
+            'Sharing this with everyone!',
+            'Best news channel! ⭐',
+            'Keep up the great work!',
+            'Watching from Los Angeles 🌴',
+            'This is why I love this channel',
+            'Amazing journalism! 📰',
+            'Breaking news done right',
+            'Thank you for keeping us informed',
+            'The production quality is top-notch',
+            'Greetings from Chicago! 🏙️',
+            'Never miss a broadcast',
+            'Professional coverage 💯',
+            'This needs more attention!',
+            'Absolutely fascinating',
+            'Watching with my family',
+            'Best news team in the business',
+            'Clear and concise reporting',
+            'Love the live format',
+            'Keep us updated please!',
+            'Excellent work team! 👍',
+            'Watching from Texas 🤠',
+            'This is history in the making',
+            'Thank you for your service',
+            'Outstanding coverage!'
+        ];
+        
+        // Comment management
+        let commentCount = 0;
+        const maxComments = 50;
+        
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('');
+        }
+        
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function addComment(username, text, isReal = false) {
+            const commentsList = document.getElementById('commentsList');
+            
+            const comment = document.createElement('div');
+            comment.className = `comment ${isReal ? 'real' : 'fake'}`;
+            
+            comment.innerHTML = `
+                <div class="comment-header">
+                    <div class="comment-avatar">${getInitials(username)}</div>
+                    <span class="comment-username">${username}</span>
+                    ${isReal ? '<span class="comment-badge">YOU</span>' : ''}
+                    <span class="comment-time">${getCurrentTime()}</span>
+                </div>
+                <div class="comment-text">${text}</div>
+            `;
+            
+            commentsList.appendChild(comment);
+            commentCount++;
+            
+            // Remove old comments if too many
+            if (commentCount > maxComments) {
+                commentsList.removeChild(commentsList.firstChild);
+                commentCount--;
+            }
+            
+            // Auto-scroll to bottom
+            commentsList.scrollTop = commentsList.scrollHeight;
+        }
+        
+        function postComment() {
+            const input = document.getElementById('commentInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                addComment('You', text, true);
+                input.value = '';
+            }
+        }
+        
+        // Allow Enter key to submit comment
+        document.getElementById('commentInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                postComment();
+            }
+        });
+        
+        // Generate fake comments periodically
+        function generateFakeComment() {
+            const username = getRandomElement(fakeUsers);
+            const text = getRandomElement(fakeComments);
+            addComment(username, text, false);
+        }
+        
+        // Add initial comments
+        setTimeout(() => {
+            addComment('Sarah Johnson', 'Great coverage! Thanks for keeping us informed 📺', false);
+        }, 1000);
+        
+        setTimeout(() => {
+            addComment('Mike Williams', 'Watching from California! 🌞', false);
+        }, 2000);
+        
+        setTimeout(() => {
+            addComment('Emily Brown', 'This is why ANN is the best news channel!', false);
+        }, 3500);
+        
+        // Generate fake comments at random intervals
+        function scheduleNextFakeComment() {
+            const delay = Math.random() * 8000 + 5000; // Random 5-13 seconds
+            setTimeout(() => {
+                generateFakeComment();
+                scheduleNextFakeComment();
+            }, delay);
+        }
+        
+        scheduleNextFakeComment();
+        
+        // Update viewer count dynamically
+        function updateViewerCount() {
+            const baseCount = 1200;
+            const variation = Math.floor(Math.random() * 100);
+            const count = baseCount + variation;
+            document.getElementById('viewerCount').textContent = count.toLocaleString();
+        }
+        
+        setInterval(updateViewerCount, 10000); // Update every 10 seconds
+    </script>
+</body>
+</html>

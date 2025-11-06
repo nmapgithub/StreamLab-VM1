@@ -1,0 +1,54 @@
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+/tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# Large video files (optional - students can add their own)
+# *.mp4
+# *.mov
+# *.mkv
+
+# Temporary files
+*.tmp
+*.temp
+
+# Hijack logs (runtime generated)
+hijack_log.txt
+
+videos/videoplayback.mp4

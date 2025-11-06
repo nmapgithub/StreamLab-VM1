@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied - Web Application Firewall</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #00ff00;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .firewall-container {
+            max-width: 800px;
+            width: 90%;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff0000;
+            border-radius: 10px;
+            padding: 3rem;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 0, 0.8); }
+        }
+
+        .warning-icon {
+            text-align: center;
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        h1 {
+            color: #ff0000;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .error-code {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            font-weight: bold;
+        }
+
+        .message {
+            background: rgba(255, 0, 0, 0.1);
+            border-left: 4px solid #ff0000;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .message p {
+            margin-bottom: 0.5rem;
+        }
+
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .firewall-container {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .bypass-link {
+            display: none;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .bypass-link a {
+            color: #00ff00;
+            text-decoration: none;
+            font-size: 0.8rem;
+            opacity: 0.3;
+        }
+
+        .bypass-link a:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrix"></div>
+    
+    <div class="firewall-container">
+        <div class="warning-icon">⚠️</div>
+        
+        <h1>Access Denied</h1>
+        
+        <div class="error-code">
+            ERROR CODE: WAF_403_FORBIDDEN
+        </div>
+
+        <div class="message">
+            <p><strong>🛡️ Web Application Firewall Active</strong></p>
+            <p>Your access request has been blocked by our security system.</p>
+            <p>This content is protected and requires proper authentication.</p>
+        </div>
+
+        <!-- Hidden comment for pentesters -->
+        
+        <div class="bypass-link">
+            <a href="/stream.html?access=granted">← Emergency Access (Authorized Personnel Only)</a>
+        </div>
+    </div>
+
+    <script>
+        // Matrix effect background
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const matrix = document.getElementById('matrix');
+        matrix.appendChild(canvas);
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters[Math.floor(Math.random() * characters.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 50);
+
+        // Check for bypass attempts
+        const urlParams = new URLSearchParams(window.location.search);
+        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+            const [key, value] = cookie.trim().split('=');
+            acc[key] = value;
+            return acc;
+        }, {});
+
+        // Bypass methods (for pentesting practice)
+        if (urlParams.get('access') === 'granted' || 
+            urlParams.get('bypass') === 'firewall' ||
+            urlParams.get('admin') === 'true' ||
+            cookies['firewall_bypass'] === 'true' ||
+            cookies['admin_access'] === '1') {
+            
+            console.log('%c🎉 Firewall Bypassed!', 'color: #00ff00; font-size: 20px; font-weight: bold');
+            console.log('%cFLAG: PENTESTER{w4f_byp4ss_m4st3r}', 'color: #ff0000; font-size: 16px');
+            
+            setTimeout(() => {
+                window.location.href = '/stream.html';
+            }, 1000);
+        }
+
+        // Show emergency link after 5 seconds (easter egg)
+        setTimeout(() => {
+            document.querySelector('.bypass-link').style.display = 'block';
+        }, 5000);
+    </script>
+</body>
+</html>
+
