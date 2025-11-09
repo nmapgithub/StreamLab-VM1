@@ -45,7 +45,8 @@ EXPOSE 1935
 COPY docker-entrypoint.sh /
 COPY broadcast.sh /
 COPY video-switcher.sh /
-RUN chmod +x /docker-entrypoint.sh /broadcast.sh /video-switcher.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.sh /broadcast.sh /video-switcher.sh && \
+    chmod +x /docker-entrypoint.sh /broadcast.sh /video-switcher.sh
 
 # Set entrypoint
 ENTRYPOINT ["/docker-entrypoint.sh"]
